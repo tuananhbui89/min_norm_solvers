@@ -57,6 +57,31 @@ class MinNormSolver:
                     sol = [(i,j),c,d]
         return sol, dps
 
+    def _min_norm_2d_fast(vecs, dps):
+        """
+        Find the minimum norm solution as combination of two points
+        This is correct only in 2D
+        ie. min_c |\sum c_i x_i|_2^2 st. \sum c_i = 1 , 1 >= c_1 >= 0 for all i, c_i + c_j = 1.0 for some i, j
+        """
+        dmin = 1e8
+        assert(type(vecs) is list)
+        assert(len(vecs[0].shape) == 1)
+
+        for i in range(len(vecs)):
+            for j in range(i+1,len(vecs)):
+                if (i,j) not in dps:
+                    dps[(i, j)] = torch.dot(vecs[i], vecs[j])
+                    dps[(j, i)] = dps[(i, j)]
+                if (i,i) not in dps:
+                    dps[(i, i)] = torch.dot(vecs[i], vecs[i])
+                if (j,j) not in dps:
+                    dps[(j, j)] = torch.dot(vecs[j], vecs[j])
+                c,d = MinNormSolver._min_norm_element_from2(dps[(i,i)], dps[(i,j)], dps[(j,j)])
+                if d < dmin:
+                    dmin = d
+                    sol = [(i,j),c,d]
+        return sol, dps
+
     def _projection2simplex(y):
         """
         Given y, it solves argmin_z |y-z|_2 st \sum z = 1 , 1 >= z_i >= 0 for all i
@@ -98,7 +123,7 @@ class MinNormSolver:
         """
         # Solution lying at the combination of two points
         dps = {}
-        init_sol, dps = MinNormSolver._min_norm_2d(vecs, dps)
+        init_sol, dps = MinNormSolver._min_norm_2d_fast(vecs, dps)
         
         n=len(vecs)
         sol_vec = torch.zeros(size=[n])
@@ -145,7 +170,7 @@ class MinNormSolver:
         """
         # Solution lying at the combination of two points
         dps = {}
-        init_sol, dps = MinNormSolver._min_norm_2d(vecs, dps)
+        init_sol, dps = MinNormSolver._min_norm_2d_fast(vecs, dps)
 
         n=len(vecs)
         sol_vec = torch.zeros(size=[n])
@@ -234,6 +259,38 @@ def test_dot_product():
     print("t_dot", t_dot)
     print("new_t_dot", new_t_dot)
 
+def test_solver(): 
+    """
+    Create three scenarios with 2D vectors and test quadratic solvers 
+    - Using Gradient descent method 
+    - Using closed form method 
+    """
+
+    # v1 = [[-5, -5], [5, 1], [-5, -5]]
+    # v2 = [[-5, -1], [5, 5], [5, 5]] 
+    # v3 = [[-1, 1], [1, 1], [5, 0]]
+
+    v1 = [1, 1, 1, 1, 1]
+    v2 = [-1, -1, -1, -1, 1]
+    v3 = [0, 0, 0, 0, 1]
+    v4 = [0, 0, 0, 0, -1]
+
+
+    tv1 = torch.tensor(np.asarray(v1))
+    tv2 = torch.tensor(np.asarray(v2))
+    tv3 = torch.tensor(np.asarray(v3))
+    tv4 = torch.tensor(np.asarray(v4))
+
+
+    print('-----------------------')
+    mgds, cost = MinNormSolver.find_min_norm_element([tv1, tv2, tv3, tv4])
+    print('find_min_norm_element', mgds, 'cost', cost)
+    print(type(mgds))
+
+    print('-----------------------')
+    mgds, cost = MinNormSolver.find_min_norm_element_FW([tv1, tv2, tv3, tv4])
+    print('find_min_norm_element_FW', mgds, 'cost', cost)
+
 if __name__ == "__main__":
-    test_dot_product()
+    test_solver()
 
