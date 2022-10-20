@@ -160,6 +160,9 @@ class MinNormSolver:
             if torch.sum(torch.abs(change)) < MinNormSolver.STOP_CRIT:
                 return sol_vec, nd
             sol_vec = new_sol_vec
+            iter_count += 1 
+        
+        return sol_vec, nd 
 
     def find_min_norm_element_FW(vecs):
         """
@@ -203,6 +206,9 @@ class MinNormSolver:
             if torch.sum(torch.abs(change)) < MinNormSolver.STOP_CRIT:
                 return sol_vec, nd
             sol_vec = new_sol_vec
+            iter_count += 1 
+        
+        return sol_vec, nd 
 
 
 def gradient_normalizers(grads, losses, normalization_type):

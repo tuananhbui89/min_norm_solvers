@@ -10,7 +10,7 @@ $$w = \underset{w \in \Delta_w}{\text{argmin}}\;\| \sum_{i=1}^m w_i v_i\|_2^2$$
 
 ## Solver
 
-- min_norm_solvers: Mainly copy from the repository https://github.com/isl-org/MultiObjectiveOptimization. My job is just replacing some numpy functions by torch functions. Especially the torch.dot function is not equivalent to the numpy.dot function.
+- min_norm_solvers: Mainly copy from the repository https://github.com/isl-org/MultiObjectiveOptimization. My job is just replacing some numpy functions by torch functions. Especially the torch.dot function is not equivalent to the numpy.dot function. Also fix some bugs (i.e., iter_count doesn't change therefore, there can be a forever while loop)
 - gradient_descent_solvers: Using soft_max reparameterize and gradient descent to solve the problem. More specifically, we define a trainable variable $\alpha \in \mathbb{R}^m$, then using soft_max function to project $\alpha$ to the simplex $\Delta_w$. Iterative solution
 
 $$\alpha^{t+1} = \alpha^t - \eta \; \nabla_{\alpha} \| \sum_{i=1}^m \text{softmax}(\alpha)_i v_i \|_2^2$$
